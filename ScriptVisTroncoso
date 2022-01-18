@@ -1,0 +1,41 @@
+    CREATE VIEW `mastercard_users` AS
+    SELECT 
+        `pasajeros`.`DNI` AS `dni`,
+        `pasajeros`.`NOMBRE` AS `nombre`,
+        `pasajeros`.`MEDIOS_DE_PAGO` AS `medios_de_pago`
+    FROM
+        `pasajeros`
+    WHERE
+        (`pasajeros`.`MEDIOS_DE_PAGO` = 'mastercard')
+        
+        
+  CREATE VIEW `vuelos_nacionales`
+  AS SELECT 
+  vuelos.codigo_de_vuelo, aerolineas.nombre_aerolinea, aerolineas.id_aerolineas, vuelos.id_movimientos
+  FROM 
+  aerolineas
+  vuelos
+  WHERE vuelos.id_movimientos = "1N";
+  
+  CREATE VIEW `origen_destino_pasajeros`
+  AS SELECT vuelos.codigo_de_vuelo, vuelos.origen, vuelos.destino, pasajeros.nombre
+  FROM
+  vuelos
+  pasajeros
+  ORDER BY pasajeros.nombre ASC;
+  
+  CREATE VIEW `vuelos_diurno´
+  AS SELECT vuelos.hora; vuelos.codigo_de_vuelo
+  FROM 
+  vuelos
+  WHERE
+  vuelos.hora between 07:00:00 and 20:00:00
+  
+  CREATE VIEW `aeropuertos_buenosaires´
+  AS SELECT aeropuertos.nombre, aeropuertos.ubicacion
+  FROM
+  aeropuertos
+  WHERE
+  aeropuertos.nombre= "Buenos Aires";
+  
+  
