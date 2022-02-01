@@ -1,0 +1,136 @@
+CREATE DATABASE IF NOT EXISTS aerocargo_trafico_argentina;
+
+USE aerocargo_trafico_argentina;
+
+CREATE TABLE IF NOT EXISTS AEROPUERTOS(
+ID_AEROPUERTOS VARCHAR(200) PRIMARY KEY,
+NOMBRE varchar(200),
+UBICACION varchar(200)
+);
+
+CREATE TABLE IF NOT EXISTS MOVIMIENTOS(
+ID_MOVIMIENTOS VARCHAR(200) PRIMARY KEY,
+TIPO_DE_MOVIMIENTO VARCHAR(200)
+);
+
+CREATE TABLE IF NOT EXISTS AEROLINEAS(
+ID_AEROLINEA VARCHAR(200) PRIMARY KEY,
+NOMBRE_AEROLINEA VARCHAR(200),
+ID_AEROPUERTOS VARCHAR(200),
+ID_MOVIMIENTOS VARCHAR(200),
+FOREIGN KEY (ID_AEROPUERTOS) REFERENCES aerocargo_trafico_argentina.AEROPUERTOS(ID_AEROPUERTOS),
+FOREIGN KEY (ID_MOVIMIENTOS) REFERENCES aerocargo_trafico_argentina.MOVIMIENTOS(ID_MOVIMIENTOS)
+);
+CREATE TABLE IF NOT EXISTS VUELOS(
+CODIGO_DE_VUELO varchar(200) PRIMARY KEY,
+FECHA DATE,
+HORA TIME,
+ORIGEN VARCHAR(200),
+DESTINO VARCHAR(200),
+ID_MOVIMIENTO VARCHAR(200),
+FOREIGN KEY (ID_MOVIMIENTOS) REFERENCES aerocargo_trafico_argentina.MOVIMIENTOS(ID_MOVIMIENTOS)
+);
+
+CREATE TABLE IF NOT EXISTS PASAJEROS(
+DNI INT NOT NULL PRIMARY KEY,
+NOMBRE VARCHAR(200),
+MEDIOS_DE_PAGO VARCHAR(200),
+CODIGO_DE_VUELO VARCHAR(200),
+FOREIGN KEY (CODIGO_DE_VUELO) REFERENCES aerocargo_trafico_argentina.VUELOS(CODIGO_DE_VUELO)
+);
+
+CREATE VIEW `mastercard_users` AS
+    SELECT 
+        `pasajeros`.`DNI` AS `dni`,
+        `pasajeros`.`NOMBRE` AS `nombre`,
+        `pasajeros`.`MEDIOS_DE_PAGO` AS `medios_de_pago`
+    FROM
+        `pasajeros`
+    WHERE
+        (`pasajeros`.`MEDIOS_DE_PAGO` = 'mastercard')
+        
+        
+  CREATE VIEW `vuelos_nacionales`
+  AS SELECT 
+  vuelos.codigo_de_vuelo, aerolineas.nombre_aerolinea, aerolineas.id_aerolineas, vuelos.id_movimientos
+  FROM 
+  aerolineas
+  vuelos
+  WHERE vuelos.id_movimientos = "1N";
+  
+  CREATE VIEW `origen_destino_pasajeros`
+  AS SELECT vuelos.codigo_de_vuelo, vuelos.origen, vuelos.destino, pasajeros.nombre
+  FROM
+  vuelos
+  pasajeros
+  ORDER BY pasajeros.nombre ASC;
+  
+  CREATE VIEW `vuelos_diurno´
+  AS SELECT vuelos.hora; vuelos.codigo_de_vuelo
+  FROM 
+  vuelos
+  WHERE
+  vuelos.hora between 07:00:00 and 20:00:00
+  
+  CREATE VIEW `aeropuertos_buenosaires´
+  AS SELECT aeropuertos.nombre, aeropuertos.ubicacion
+  FROM
+  aeropuertos
+  WHERE
+  aeropuertos.nombre= "Buenos Aires";
+  
+  
+  CREATE DEFINER=`root`@`localhost` FUNCTION `ver_destino`(vCODIGO_DE_VUELO VARCHAR (50)) RETURNS varchar(50) CHARSET utf8mb4
+    READS SQL DATA
+BEGIN 
+DECLARE resultado VARCHAR (50) ;
+SET RESULTADO = (SELECT DESTINO FROM aerocargo_trafico_argentina.vuelos WHERE CODIGO_DE_VUELO = vCODIGO_DE_VUELO);
+RETURN resultado;
+END
+
+—esta función sirve para ver el destino de un vuelo
+
+CREATE DEFINER=`root`@`localhost` FUNCTION `ubicacion_de_aeropuerto`(aerolineaid varchar (50)) RETURNS varchar(50) CHARSET utf8mb4
+    READS SQL DATA
+BEGIN
+DECLARE resultado varchar (50);
+set resultado = ( SELECT concat (aerolineas.nombre_aerolinea,' ',aeropuertos.ubicacion) 
+from aerocargo_trafico_argentina.aerolineas 
+inner join aerocargo_trafico_argentina.aeropuertos 
+on aerocargo_trafico_argentina.aerolineas.ID_AEROPUERTOS = aerocargo_trafico_argentina.aeropuertos .ID_AEROPUERTOS
+where ID_AEROLINEA = aerolineaid);
+RETURN resultado;
+END
+
+—esta función sirve para ver la ubicación del aeropuerto indicado para cada aerolinea
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `ordernar`(IN orderby CHAR(20))
+BEGIN
+	if orderby <> '' then
+		set @ordenar = concat('ORDER BY ', orderby);
+	else 
+		set @ordenar = '';
+    end if;
+    
+    set @clausula = concat('SELECT * FROM vuelos ', @ordenar);
+    
+    prepare ejecutar_sql from @clausula;
+    execute ejecutar_sql;
+    deallocate prepare ejecutar_sql;
+END
+
+–con este Stored Procedure se ordena la tabla vuelos 
+
+DELIMITER $$
+CREATE PROCEDURE `agregacion`(IN dni1 char(60), IN nombre1 char(200), metodo1 char(200), codigovuelo1 char(200))
+BEGIN
+	IF dni1 <> pasajeros.DNI || codigovuelo1 <> pasajeros.CODIGO_DE_VUELO THEN
+		INSERT INTO pasajeros (DNI, NOMBRE, MEDIOS_DE_PAGO, CODIGO_DE_VUELO) VALUES (dni1, nombre1, metodo1,codigovuelo1);
+    ELSE
+		DELETE FROM pasajeros WHERE DNI = dni1;
+	END IF;
+END
+$$
+—con este Stored Procedure se agregan o borran campos dentro de la tabla de pasajeros
+
+
