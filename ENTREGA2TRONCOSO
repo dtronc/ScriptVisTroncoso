@@ -133,4 +133,39 @@ END
 $$
 —con este Stored Procedure se agregan o borran campos dentro de la tabla de pasajeros
 
+El siguiente trigger funciona para que cuandos se inserte un nuevo vuelo en la table VUELOS, estos mismos valores insertados también se inserten dentro de la tabla VUELOSespejo que serìa nuestro backup.
+
+CREATE TABLE IF NOT EXISTS VUELOSespejo(
+CODIGO_DE_VUELO varchar(200) PRIMARY KEY,
+FECHA DATE,
+HORA TIME,
+ORIGEN VARCHAR(200),
+DESTINO VARCHAR(200),
+ID_MOVIMIENTO VARCHAR(200),
+FOREIGN KEY (ID_MOVIMIENTO) REFERENCES aerocargo_trafico_argentina.MOVIMIENTOS(ID_MOVIMIENTOS)
+);
+
+CREATE TRIGGER `bef_ins_vuelos`
+BEFORE INSERT ON aerocargo_trafico_argentina.vuelos FOR EACH ROW
+INSERT INTO aerocargo_trafico_argentina.vuelosespejo (CODIGO_DE_VUELO, FECHA, HORA, ORIGEN, DESTINO, ID_MOVIMIENTO)
+VALUES (NEW.CODIGO_DE_VUELO, NEW.FECHA, NEW.HORA, NEW.ORIGEN, NEW.DESTINO, NEW.ID_MOVIMIENTO, session_user(), current_date(), current_time())
+
+
+El siguiente trigger funciona para que al ingresar un nuevo pasajero dentro de la tabla PASAJEROS los valores también se inserten dentro de la tabal PASAJEROSespejo que es nuestro backup donde también aparecera la fecha, hora y usuario que lo insertò
+
+CREATE TABLE IF NOT EXISTS PASAJEROSespejo(
+DNI INT NOT NULL PRIMARY KEY,
+NOMBRE VARCHAR(200),
+MEDIOS_DE_PAGO VARCHAR(200),
+CODIGO_DE_VUELO VARCHAR(200),
+FOREIGN KEY (CODIGO_DE_VUELO) REFERENCES aerocargo_trafico_argentina.VUELOS(CODIGO_DE_VUELO)
+);
+
+CREATE TRIGGER `nuevospasajeros`
+AFTER INSERT ON aerocargo_trafico_argentina.pasajeros FOR EACH ROW
+INSERT INTO aerocargo_trafico_argentina.pasajerosespejo
+VALUES (session_user(), NEW.DNI, NEW.NOMBRE, NEW.MEDIOS_DE_PAGO, NEW.CODIGO_DE_VUELO, current_date(), current_time());
+
+
+
 
